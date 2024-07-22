@@ -1,0 +1,91 @@
+Created by: Carter Nesbitt <ccnesbitt@gmail.com>
+Created on: 21 July 2024
+Description: Test suite for SSH connectivity using password and key-based authentication
+
+Test environment setup:
+    - Ensure server is on, and both the client and server is connected to WiFi, have SSH connectivity enabled
+    - Define constraints for password authentication
+        - Password constraints (length, character requirements/exclusions, etc.)
+        - Password rollover periods (how often users are required to change their password)
+    - Review acceptable SSH key types on server (RSA, ed25519, etc.)
+
+Teardown:
+    - Delete any user accounts created during testing sequence from server
+    - Remove any public keys created during testing sequence from server
+    - Remove any public/private keys created during testing sequence from client
+
+Tools used in testing:
+    - Terminal for SSH CLI and file creation/modification
+    - SSH connectivity tool installed on client/server (OpenSSH)
+    - Scripting language such as bash, perl or python to automate testing
+
+Tests:
+
+    Test group 1: User account creation
+        Preconditions:
+            - Unless otherwise specified, user account does not yet exist
+            - Unless otherwise specified, user provides valid password during account creation
+
+        1. User attempts to create an account on server, not adhering to password creation constraints
+           Expectation: User account is not created
+
+        2. User attempts to create an account on server with pre-existing username
+           Expectation: User account is not created
+
+        3. User attempts to create an account on server whilst adhering to password creation constraints
+           Expectation: User account is created
+
+    Test group 2: Password-based SSH authentication
+        Preconditions:
+            - Unless otherwise specified, user account exists and is properly setup on the server
+
+        1. User attempts SSH connection to server with incorrect password for an existing user
+           Expectation: SSH connection not successful
+
+        2. User attempts SSH connection to server with an invalid account username
+           Expectation: SSH connection not successful
+
+        3. User attempts SSH connection to server with correct password
+           Expectation: SSH connection successful
+
+        4. User attempts SSH connection to server using password created before the server’s most recent password-rollover
+           Expectation: SSH connection not successful
+
+    Test group 3: Key-based SSH authentication
+        Preconditions:
+            - Unless otherwise specified, user has created a valid public/private key-pair
+            - Unless otherwise specified, user’s key type is recognized by server
+            - Unless otherwise specified, user’s public key is included in the corresponding ~/.ssh/authorized_keys file on the server
+            - Unless otherwise specified, client's private key file has the correct permissions needed for SSH connectivity
+
+        1. User attempts SSH connection with key-pair, but does not copy public key to server’s authorized_keys file
+           Expectation: SSH connection not successful
+
+        2. User attempts SSH connection with key-pair, but private key file on client is accessible by other (non-root) users
+           Expectation: SSH connection not successful
+
+        3. User attempts SSH connection with key-pair, but private key used does not match public key on server
+           Expectation: SSH connection not successful
+
+        4. User attempts SSH connection with key-pair created with key-type not recognizable by server
+           Expectation: SSH connection not successful
+
+        5. User attempts SSH connection with proper key-pair
+           Expectation: SSH connection successful
+
+    Test group 4: Miscellaneous tests
+        Preconditions:
+            - Unless otherwise specified any and all clients have valid server credentials
+
+        1. Two clients attempt to connect to server simulataneously using separate usernames
+           Expectation: SSH connection successful for both clients
+
+        2. Two clients attempt to connect to server simulataneously using the same username
+           Expectation: SSH connection successful for both clients
+
+        3. Client is connected to server, and is inactive for longer than the SSH connection timeout period
+           Expectation: SSH connection is terminated
+
+        4. Client is connected to server, and significant network delays are experienced, resulting in an incomplete TCP handshake
+           Expectation: SSH connection is terminated
+
